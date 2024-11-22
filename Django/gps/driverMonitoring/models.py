@@ -60,7 +60,7 @@ class Driver(models.Model):
     type_of_driver = models.CharField(max_length=100, choices=DriverTypes.choices)
     taxi = models.ForeignKey('Taxi', models.DO_NOTHING, blank=True, null=True, related_name="drivers")
     employee = models.OneToOneField('Employee', models.CASCADE, blank=False, null=False, unique=True)
-    pondo = models.IntegerField(blank=False, null=False)
+    pondo = models.IntegerField(blank=False, null=False, default=0)
 
     def __str__(self):
         return f"Driver ID: {str(self.driver_id)}, Type of Driver: {self.type_of_driver}"
@@ -83,6 +83,11 @@ class OfficeStaff(models.Model):
 
 
 class Taxi(models.Model):
+
+    class TravelTypes(models.TextChoices):
+        DAILY = "daily"
+        ALTERNATE = "alternate"
+
     brand = models.CharField(max_length=50)
     model = models.CharField(max_length=100)
     release_year = models.DateField()
@@ -90,6 +95,7 @@ class Taxi(models.Model):
     service_status = models.CharField(max_length=20, blank=False, null=False)
     day_of_coding = models.CharField(max_length=10, blank=False, null=False)
     taxi_id = models.AutoField(primary_key=True)
+    travel_type = models.CharField(max_length=50, choices=TravelTypes.choices, default=TravelTypes.DAILY)
 
     def __str__(self):
         return f"Taxi ID: {str(self.taxi_id)}, Plate Number: {str(self.plate_number)}"

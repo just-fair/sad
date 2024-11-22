@@ -136,7 +136,7 @@ const SideBar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  {user.first_name}
+                  {user ? user.first_name : "Super Admin"}
                 </Typography>
                 <Typography variant="h5">Administrator</Typography>
               </Box>
@@ -161,14 +161,14 @@ const SideBar = () => {
             </Typography>
             <Item
               title="Office Employees"
-              destination="/office-employees"
+              destination="office-employees"
               icon={<BadgeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Drivers"
-              destination="/drivers"
+              destination="drivers"
               icon={<AssignmentIndOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}

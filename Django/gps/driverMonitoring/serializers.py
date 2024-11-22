@@ -121,24 +121,21 @@ class OfficeStaffSerializer(serializers.ModelSerializer):
         fields = '__all__'  # All fields including nested employee data
 
     def update(self, instance, validated_data):
-        # Get employee data from the request
+        # Extract employee data
         employee_data = validated_data.pop('employee', None)
 
-        # Update office staff fields
+        # Update OfficeStaff fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # If employee data is provided, handle the update or creation of the employee
+        # If employee data is provided, update only specified fields
         if employee_data:
-            # If employee_id is provided, update the existing employee
-            employee, created = Employee.objects.update_or_create(
-                employee_id=employee_data.get('employee_id'),  # Match based on employee_id
-                defaults=employee_data  # Update fields
-            )
-            # Set the updated/created employee to office staff
-            instance.employee = employee
-            instance.save()
+            # Get the existing employee instance
+            employee = instance.employee
+            for attr, value in employee_data.items():
+                setattr(employee, attr, value)
+            employee.save()
 
         return instance
 
@@ -156,6 +153,8 @@ class OfficeStaffSerializer(serializers.ModelSerializer):
         office_staff = OfficeStaff.objects.create(employee=employee, **validated_data)
 
         return office_staff
+    
+    
     
 
 class EmployeeLimitedDetailsSerializer(serializers.ModelSerializer):
@@ -195,13 +194,22 @@ class DriverSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer()
     taxi = TaxiSerializer()
 
+    
+
     class Meta:
         model=Driver
         fields='__all__'
 
     def validate(self, data):
+        instance_taxi_id = instance_taxi_id= getattr(self.instance.taxi, "taxi_id", None) if self.instance else None
         taxi_id = self.initial_data.get("taxi").get("taxi_id")
+
+        if instance_taxi_id == taxi_id:
+            
+            return data
+        
         drivers = Driver.objects.filter(taxi=taxi_id)
+        print(drivers)
         if data.get("type_of_driver") == Driver.DriverTypes.ALTERNATE:
             if drivers.exists():
                 if drivers.count() == 1:
@@ -214,10 +222,13 @@ class DriverSerializer(serializers.ModelSerializer):
             else:
                 return data
         else:
+            print(type(drivers))
             if drivers.exists():
-                return data
-            else:
                 raise ValidationError("Taxi is currently assigned to a driver")
+            else:
+                return data
+                
+                
 
 
 

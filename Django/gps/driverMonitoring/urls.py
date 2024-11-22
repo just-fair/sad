@@ -14,7 +14,8 @@ urlpatterns = [
     path("user/", views.DynamicUserView.as_view()),
     path("token/", views.CustomTokenPairView.as_view()),
     path("token/refresh/", TokenRefreshView.as_view()),
-    path("auth/", include("rest_framework.urls"))
+    path("auth/", include("rest_framework.urls")),
+     path('image-upload-token/', views.GenerateImageUploadToken.as_view())
     # path('employees/', views.EmployeeListView.as_view()),
     # path('employees/<str:pk>/', views.EmployeeDetailsView.as_view()),
     # path('employees/add', views.AddEmployeeView.as_view()),

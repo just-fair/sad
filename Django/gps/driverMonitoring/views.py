@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework import permissions, generics
@@ -7,6 +8,27 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Employee, Driver, Taxi, Boundary, Contribution, OfficeStaff
 from django.contrib.auth.models import User
 from .serializers import EmployeeSerializer, DriverSerializer, TaxiSerializer, BoundarySerializer, ContributionSerializer, EmployeeLimitedDetailsSerializer, DriverLimitedDetailsSerializer, UserSerializer, CustomTokenPairSerializer, OfficeStaffSerializer
+import os
+from dotenv import load_dotenv
+from imagekitio import ImageKit
+
+load_dotenv()
+
+imagekit = ImageKit(
+    public_key=os.getenv("IMAGEKIT_PUBLIC_API_KEY"),   
+    private_key=os.getenv("IMAGEKIT_PRIVATE_API_KEY"),  
+    url_endpoint=os.getenv("IMAGEKIT_URL_END_POINT"),   
+)
+
+class GenerateImageUploadToken(generics.RetrieveAPIView):
+    def get(self, request):
+        try:
+            # Generate authentication parameters
+            auth_params = imagekit.get_authentication_parameters()
+            return Response(auth_params, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class CustomTokenPairView(TokenObtainPairView):
@@ -69,11 +91,39 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     
 class OfficeViewSet(viewsets.ModelViewSet):
     queryset = OfficeStaff.objects.all().select_related("employee")
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = OfficeStaffSerializer
 
+    @action(detail=False, methods=["post"], url_path="delete-multiple")
+    def delete_multiple(self, request):
+        ids = request.data.get("ids", [])
+
+        if not ids:
+            return Response({"message": "No Data provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Kunin yung office staff
+        office_staff_to_delete = OfficeStaff.objects.filter(office_staff_id__in=ids)
+
+        # kunin yung related data ng record sa employee
+        employees_to_delete = office_staff_to_delete.values_list('employee', flat=True)
+
+        
+        # check kung merong employee, pag nag eexist edi burahin tas kasama na din sa deletion yung office staff kasi naka model.CASCADE
+        for employee_id in employees_to_delete:
+            if Employee.objects.filter(employee_id=employee_id).exists():
+                
+                Employee.objects.filter(employee_id=employee_id).delete()
+        
+
+        return Response(
+            {
+                "message": f"{len(employees_to_delete)} is successfully deleted"
+            },
+            status=status.HTTP_200_OK,
+        )
+
 class DriverViewSet(viewsets.ModelViewSet):
-    queryset = Driver.objects.all().prefetch_related("employee", "taxi")
+    queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
     permission_classes = [AllowAny]
 
     def get_serializer_class(self):

@@ -12,6 +12,10 @@ django-silk = "*"
 django-cors-headers = "*"
 djangorestframework-simplejwt = "*"
 python-dotenv = "*"
+channels = "*"
+imagekitio = "*"
+uvicorn = "*"
+websockets = "*"
 
 [dev-packages]
 

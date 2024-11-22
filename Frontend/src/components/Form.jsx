@@ -84,7 +84,8 @@ const Form = ({ route, method }) => {
         navigate("/login");
       } else useNavigate("/not_found");
     } catch (err) {
-      alert(err.message);
+      alert(err);
+      console.log(err);
     } finally {
       setLoading(false);
     }

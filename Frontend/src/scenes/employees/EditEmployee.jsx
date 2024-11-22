@@ -9,19 +9,43 @@ import {
   MenuItem,
   Typography,
   useTheme,
-  colors,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useNavigate, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  useLoaderData,
+  redirect,
+} from "react-router-dom";
 import { Formik } from "formik";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import * as yup from "yup";
 import Header from "../../components/Header";
-import ImageUploader from "./ImageUploader";
+import ImageUploader from "./imageUploader";
 import api from "../../api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const AddEmployee = () => {
+export const employeeLoader = async ({ params }) => {
+  const { id } = params;
+  console.log(id);
+
+  if (!id) {
+    throw new Response("Employee ID not provided", { status: 400 });
+  }
+
+  try {
+    const res = await api.get(`/office-employees/${id}`);
+    if (res.status !== 200) {
+      throw new Error("Cannot get information of an employee");
+    }
+
+    return res.data;
+  } catch {
+    alert(err);
+  }
+};
+
+const EditEmployee = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const isNonMobile = useMediaQuery("(min-width:800px)");
@@ -30,12 +54,29 @@ const AddEmployee = () => {
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null); // Holds the preview URL
   const [imageUrl, setImageUrl] = useState(null); // Holds the uploaded image URL
 
+  const initialValue = useLoaderData();
+  console.log(initialValue);
+
+  const employeeData = {
+    ...initialValue.employee,
+    office_role: initialValue.office_role,
+  };
+
+  console.log(employeeData);
+
+  useEffect(() => {
+    if (employeeData) {
+      console.log(employeeData.image);
+      setImageUrl(employeeData.image);
+    }
+  }, [employeeData]);
+
   const handleSubmit = async (values, { resetForm }) => {
     console.log(values);
 
     try {
       const data = {
-        office_role: values.role,
+        office_role: values.office_role,
         employee: {
           ...values,
           role: "office staff",
@@ -43,33 +84,37 @@ const AddEmployee = () => {
       };
       console.log(data);
 
-      const res = await api.post("/office-employees/", data);
+      const res = await api.patch(
+        `/office-employees/${initialValue.office_staff_id}/ `,
+        data
+      );
 
-      if (res.status === 201) {
-        alert("New empoyee added successfully");
-        resetForm();
-        setImage(null);
-        setImagePreviewUrl(null);
-        setImageUrl(null);
+      if (res.status === 200) {
+        alert("Changes have been saved");
+        return navigate("/office-employees");
       }
     } catch (error) {
       alert(error);
-      console.log(error.data);
+      console.log(error);
     }
   };
 
-  const initialValue = {
-    image: "",
-    last_name: "",
-    first_name: "",
-    middle_name: "",
-    birthday: "",
-    gender: "M",
-    contact_number: "",
-    is_active: true,
-    role: "admin",
-    date_started: new Date().toISOString().split("T")[0],
+  const handleEditSubmit = async (values, { resetForm }) => {
+    console.log(values);
   };
+
+  //   const initialValue = {
+  //     image: "",
+  //     last_name: "",
+  //     first_name: "",
+  //     middle_name: "",
+  //     birthday: "",
+  //     gender: "M",
+  //     contact_number: "",
+  //     is_active: true,
+  //     role: "admin",
+  //     date_started: new Date().toISOString().split("T")[0],
+  //   };
 
   const employeeSchema = yup.object().shape({
     image: yup.string(),
@@ -80,8 +125,7 @@ const AddEmployee = () => {
     gender: yup.string(),
     contact_number: yup.string().required("Phone number is Required"),
     isActive: yup.boolean(),
-    role: yup.string().required("First Name is Required"),
-    date_started: yup.date().required("Date started is Required"),
+    office_role: yup.string().required("First Name is Required"),
   });
 
   return (
@@ -102,8 +146,8 @@ const AddEmployee = () => {
         }}
       >
         <Header
-          title="Add Office Employee"
-          subTitle="Adding New Office Employee in GPS"
+          title="Edit Office Employee"
+          subTitle="Updating the information of an Office Employee"
         />
         <IconButton
           sx={{ width: "70px", mb: "30px" }}
@@ -117,7 +161,7 @@ const AddEmployee = () => {
 
       <Formik
         onSubmit={handleSubmit}
-        initialValues={initialValue}
+        initialValues={employeeData}
         validationSchema={employeeSchema}
       >
         {({
@@ -237,10 +281,10 @@ const AddEmployee = () => {
                 <InputLabel>Role</InputLabel>
                 <Select
                   name="role"
-                  value={values.role}
+                  value={values.office_role}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={!!touched.role && !!errors.role}
+                  error={!!touched.office_role && !!errors.office_role}
                 >
                   <MenuItem value="admin">Admin</MenuItem>
                   <MenuItem value="dispatcher">Dispatcher</MenuItem>
@@ -253,18 +297,18 @@ const AddEmployee = () => {
               </FormControl>
 
               {/* <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Phone Number"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.phoneNumber}
-                name="phoneNumber"
-                error={!!touched.phoneNumber && !!errors.phoneNumber}
-                helperText={touched.phoneNumber && errors.phoneNumber}
-                sx={{ gridColumn: "span 1" }}
-              /> */}
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Phone Number"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.phoneNumber}
+                  name="phoneNumber"
+                  error={!!touched.phoneNumber && !!errors.phoneNumber}
+                  helperText={touched.phoneNumber && errors.phoneNumber}
+                  sx={{ gridColumn: "span 1" }}
+                /> */}
 
               <TextField
                 fullWidth
@@ -338,12 +382,8 @@ const AddEmployee = () => {
             </Box>
 
             <Box display="flex" justifyContent="flex-end" mt="10px">
-              <Button
-                type="submit"
-                variant="contained"
-                sx={{ bgcolor: colors.green[600] }}
-              >
-                Add New Employee
+              <Button type="submit" variant="contained">
+                Save Changes
               </Button>
             </Box>
           </form>
@@ -353,4 +393,4 @@ const AddEmployee = () => {
   );
 };
 
-export default AddEmployee;
+export default EditEmployee;

@@ -30,6 +30,7 @@ SECRET_KEY = 'django-insecure-^meqgwl!791h0)+_!b5r1_4nwcj@#z70opb4fb3io=$9@*c-lb
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES" : (
@@ -60,7 +61,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'silk',
-    'corsheaders'
+    'corsheaders',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -96,6 +98,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'gps.wsgi.application'
+
+ASGI_APPLICATION = "gps.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 
 # Database
