@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import ProtectedRoute from "./components/protectedRoutes.jsx";
 import NotFound from "./scenes/NotFound.jsx";
 import Login from "./scenes/Login.jsx";
@@ -27,6 +27,12 @@ import DriverDetails, {
 import AddDriver, {
   loader as availableTaxiLoader,
 } from "./scenes/drivers/AddDriver.jsx";
+import NewDrivers, {
+  loader as newDriversLoader,
+} from "./scenes/drivers/NewDrivers.jsx";
+import NewDriverDetails, {
+  loader as newDriverLoader,
+} from "./scenes/drivers/NewDriverDetails.jsx";
 
 import Taxis, { loader as taxisLoader } from "./scenes/taxis/index.jsx";
 import TaxiTiles from "./scenes/taxis/TaxiTiles.jsx";
@@ -84,6 +90,19 @@ const router = createBrowserRouter([
           {
             path: "",
             element: <DriversTiles />,
+          },
+          {
+            path: "new",
+            element: <Outlet />,
+            // loader: newDriversLoader,
+            children: [
+              { path: "", element: <NewDrivers />, loader: newDriversLoader },
+              {
+                path: "details/:id",
+                element: <NewDriverDetails />,
+                loader: newDriverLoader,
+              },
+            ],
           },
           {
             path: "details/:id",

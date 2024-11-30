@@ -11,6 +11,8 @@ from .serializers import EmployeeSerializer, DriverSerializer, TaxiSerializer, D
 import os
 from dotenv import load_dotenv
 from imagekitio import ImageKit
+from datetime import timedelta
+from django.utils import timezone
 
 load_dotenv()
 
@@ -133,20 +135,43 @@ class OfficeViewSet(viewsets.ModelViewSet):
         )
 
 class DriverViewSet(viewsets.ModelViewSet):
-    
+    queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
     permission_classes = [AllowAny]
-
+    
+    # def get_queryset(self):
+    #     queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
+    #     taxi_id = self.request.query_params.get("taxi");
+    
+    #     if taxi_id:
+    #         queryset = queryset.filter(taxi=taxi_id)
+    #     return queryset
+    
     def get_queryset(self):
-        queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
+        queryset = super().get_queryset()
+
+        
         taxi_id = self.request.query_params.get("taxi");
+        if taxi_id:
+            queryset = queryset.filter(taxi=taxi_id)
+            
     
         if taxi_id:
             queryset = queryset.filter(taxi=taxi_id)
         return queryset
 
+        new_driver = self.request.query_params.get('new_driver', None)
+
+        if new_driver == 'true':
+            now = timezone.now()
+            queryset = queryset.filter(employee__date_started__gte=now - timedelta(days=7))
+            queryset = queryset.filter(employee__date_started__lt=now)
+
+        return queryset
+
     def get_serializer_class(self):
         if self.action == "list":
             return DriverLimitedDetailsSerializer
+            # return DriverSerializer
         
         return DriverSerializer
     

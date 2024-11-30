@@ -44,6 +44,7 @@ const AddDriver = () => {
   const isNonMobile = useMediaQuery("(min-width:800px)");
 
   const driver = location.state ? location.state.driver : null;
+  const [initialDriver, setInitialDriver] = useState(driver);
   const editMode = location.state ? location.state.editable : true;
   const driverImage = driver ? driver.employee.imaeg : null;
 
@@ -204,7 +205,7 @@ const AddDriver = () => {
 
       <Formik
         onSubmit={handleSubmit}
-        initialValues={driver ? driver : initialValue}
+        initialValues={driver ? initialDriver : initialValue}
         validationSchema={driverSchema}
       >
         {({
@@ -506,11 +507,12 @@ const AddDriver = () => {
                   onChange={(e) => {
                     const selectedTaxiId = e.target.value;
                     setFieldValue("taxi_id", selectedTaxiId);
-
-                    const selectedTaxi = taxiOptions.find(
-                      (taxi) => taxi.taxi_id === selectedTaxiId
-                    );
-                    setFieldValue("taxi_details", selectedTaxi);
+                    if (selectedTaxiId !== "") {
+                      const selectedTaxi = taxiOptions.find(
+                        (taxi) => taxi.taxi_id === selectedTaxiId
+                      );
+                      setFieldValue("taxi_details", selectedTaxi);
+                    } else setFieldValue("taxi_details", null);
 
                     console.log(e.target.value);
                   }} // set only the taxi_id
@@ -518,12 +520,13 @@ const AddDriver = () => {
                   error={!!touched.taxi_id && !!errors.taxi_id}
                   disabled={!editable}
                 >
+                  <MenuItem value="">No Taxi</MenuItem>
                   {driver?.taxi_details && (
                     <MenuItem
-                      value={values.taxi_details.taxi_id}
+                      value={driver.taxi_details.taxi_id}
                       // selected={true}
                     >
-                      {values.taxi_details.plate_number}
+                      {driver.taxi_details.plate_number}
                     </MenuItem>
                   )}
                   {taxiOptions.map((taxi) => (

@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     employee = serializers.SerializerMethodField(read_only=True)
     

@@ -213,9 +213,7 @@ const LogForm = () => {
         )}
 
         <div className="formGroup">
-          <label>
-            {mode === "park" ? "Current Gas (Liters)" : "Gas (Liters)"}:
-          </label>
+          <label>Current Gas (Liters)</label>
           <input
             required
             type="number"

@@ -3,9 +3,10 @@ import {
   useNavigate,
   Outlet,
   useLocation,
+  Link,
 } from "react-router-dom";
 import api from "../../api";
-import { Box } from "@mui/material";
+import { Tabs, Tab, Box } from "@mui/material";
 import { useEffect, useState } from "react";
 
 export const driversLoader = async () => {
@@ -52,6 +53,48 @@ const Drivers = () => {
         padding: "20px",
       }}
     >
+      <Box sx={{ width: "100%" }}>
+        <Tabs
+          sx={{
+            "& .MuiTabs-indicator": {
+              backgroundColor: "green", // Change indicator color
+              color: "green",
+            },
+          }}
+          value={location.pathname} // Set the active tab based on the current path
+          // onChange={(event, newValue) => {
+          //   window.location.pathname = newValue; // Change the path on tab click
+          // }}
+          // indicatorColor="primary"
+          // textColor="primary"
+          centered
+        >
+          <Tab
+            sx={{
+              color: "gray", // Default text color
+              "&.Mui-selected": {
+                color: "green", // Change text color when selected
+              },
+            }}
+            label="All Drivers"
+            value="/drivers"
+            component={Link}
+            to="/drivers"
+          />
+          <Tab
+            sx={{
+              color: "gray", // Default text color
+              "&.Mui-selected": {
+                color: "green", // Change text color when selected
+              },
+            }}
+            label="New Drivers"
+            value="/drivers/new"
+            component={Link}
+            to="/drivers/new"
+          />
+        </Tabs>
+      </Box>
       <Outlet context={{ drivers: drivers }} />
     </Box>
   );
