@@ -16,7 +16,7 @@ const AdminLayout = () => {
         <App>
           <Outlet />
         </App>
-      ) : user.role === "office staff" ? (
+      ) : user.office_role === "admin" ? (
         <App>
           <Outlet />
         </App>

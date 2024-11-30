@@ -1,4 +1,5 @@
 import { Box, Button, colors } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import Tile from "./Tile";
 import Header from "../../components/Header";
 import { useOutletContext, useNavigate } from "react-router-dom";
@@ -29,13 +30,18 @@ const DriversTiles = () => {
       </Box>
       <Box
         sx={{
-          display: "flex",
-          gap: "10px",
+          // display: "flex",
+          // gap: "10px",
+          flexGrow: 1,
         }}
       >
-        {drivers.map((driver) => (
-          <Tile driver={driver} key={driver.driver_id} />
-        ))}
+        <Grid container spacing={3}>
+          {drivers.map((driver) => (
+            <Grid key={driver.driver_id} size={{ xs: 12, md: 6, lg: 4, xl: 3 }}>
+              <Tile driver={driver} />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     </Box>
   );

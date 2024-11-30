@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { Outlet, redirect } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import DispatcherView from "../DispatcherView.jsx";
+import BottomNavBar from "../DispatcherView.jsx/BottomNavBar.jsx";
 
 const DispatcherLayout = () => {
   const { user } = useContext(UserContext);
@@ -9,14 +10,16 @@ const DispatcherLayout = () => {
   return (
     <>
       <>
-        <Outlet />
-        {/* {user.role === "admin" ? (
-          <DispatherView>
+        {/* <Outlet /> */}
+        {user.office_role === "dispatcher" ? (
+          <>
+            <DispatcherView />
             <Outlet />
-          </DispatherView>
+            <BottomNavBar />
+          </>
         ) : (
           redirect("/login")
-        )} */}
+        )}
       </>
     </>
   );

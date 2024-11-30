@@ -30,16 +30,27 @@ import AddDriver, {
 
 import Taxis, { loader as taxisLoader } from "./scenes/taxis/index.jsx";
 import TaxiTiles from "./scenes/taxis/TaxiTiles.jsx";
+import AddTaxi from "./scenes/taxis/AddTaxi.jsx";
+import TaxiDetails, {
+  loader as taxiDetailsLoader,
+} from "./scenes/taxis/TaxiDetails.jsx";
 
-import LogForm from "./DispatcherView.jsx/LogForm.jsx";
+import Home, { loader as allTaxiLoader } from "./DispatcherView.jsx/Home.jsx";
+import LogForm, {
+  dispatchTaxiLoader,
+  currentDriverLoader,
+} from "./DispatcherView.jsx/LogForm.jsx";
 import ParkForm from "./DispatcherView.jsx/ParkForm.jsx";
+import DispatchmentRecords, {
+  loader as dispatchmentRecordsLoader,
+} from "./DispatcherView.jsx/DispatchmentRecords.jsx";
 
 import Locations from "./scenes/locations/index.jsx";
 import AdminLayout from "./routesLayout/AdminLayout.jsx";
 import DriverLayout from "./routesLayout/DriverLayout.jsx";
+
 import DispatcherLayout from "./routesLayout/DispatcherLayout.jsx";
 import { UserProvider } from "./context/UserContext.jsx";
-import DispatcherView from "./DispatcherView.jsx/index.jsx";
 
 const router = createBrowserRouter([
   {
@@ -91,7 +102,15 @@ const router = createBrowserRouter([
         path: "taxis",
         element: <Taxis />,
         loader: taxisLoader,
-        children: [{ path: "", element: <TaxiTiles /> }],
+        children: [
+          { path: "", element: <TaxiTiles /> },
+          { path: "add", element: <AddTaxi /> },
+          {
+            path: "details/:id",
+            element: <TaxiDetails />,
+            loader: taxiDetailsLoader,
+          },
+        ],
       },
       { path: "locations", element: <Locations /> },
     ],
@@ -114,9 +133,14 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { path: "", element: <DispatcherView /> },
-      { path: "log", element: <LogForm /> },
-      { path: "park", element: <ParkForm /> },
+      { path: "", element: <Home />, loader: allTaxiLoader },
+      { path: "log/:id", element: <LogForm />, loader: dispatchTaxiLoader },
+      { path: "park/:id", element: <LogForm />, loader: currentDriverLoader },
+      {
+        path: "records",
+        element: <DispatchmentRecords />,
+        loader: dispatchmentRecordsLoader,
+      },
     ],
   },
   {

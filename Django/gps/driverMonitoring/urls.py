@@ -9,6 +9,7 @@ router.register(r"drivers", views.DriverViewSet, basename="driver")
 router.register(r"taxis", views.TaxiViewSet, basename="taxi")
 router.register(r"accounts", views.UserViewSet, basename="account")
 router.register(r"office-employees", views.OfficeViewSet, basename="office-employee")
+router.register(r"dispatchment-history", views.DispatchViewSet, basename="dispatchment-history");
 
 urlpatterns = [
     path("user/", views.DynamicUserView.as_view()),

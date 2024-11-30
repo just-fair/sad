@@ -23,7 +23,7 @@ export const loader = async () => {
 };
 
 const Taxis = () => {
-  const taxis = useLoaderData();
+  const [taxis, setTaxis] = useState(useLoaderData());
   const location = useLocation();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const Taxis = () => {
 
         if (res.status === 200) {
           console.log(res);
-          return res.data;
+          return setTaxis(res.data);
         }
       } catch (error) {
         console.log(error);

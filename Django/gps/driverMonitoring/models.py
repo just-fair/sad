@@ -46,6 +46,8 @@ class Employee(models.Model):
 
         super().save(*args, **kwargs)
 
+    
+
 
 
 
@@ -88,25 +90,59 @@ class Taxi(models.Model):
         DAILY = "daily"
         ALTERNATE = "alternate"
 
+    class DaysOfWeek(models.TextChoices):
+        MONDAY= 'monday'
+        TUESDAY= 'tuesday'
+        WEDNESDAY= 'wednesday'
+        THURSDAY= 'thursday'
+        FRIDAY='friday'
+        
+
+    class Condition(models.TextChoices):
+        PARKED = "parked"
+        REPAIRING = "repairing"
+        CODING = 'coding'    
+        DEPLOYED = "deployed"
+
+
     brand = models.CharField(max_length=50)
     model = models.CharField(max_length=100)
     release_year = models.DateField()
-    plate_number = models.CharField( max_length=10)
-    service_status = models.CharField(max_length=20, blank=False, null=False)
-    day_of_coding = models.CharField(max_length=10, blank=False, null=False)
+    plate_number = models.CharField( max_length=10, unique=True)
+    condition = models.CharField(max_length=20, choices=Condition.choices, default=Condition.PARKED)
+    day_of_coding = models.CharField(max_length=10, choices=DaysOfWeek.choices, default=DaysOfWeek.MONDAY)
     taxi_id = models.AutoField(primary_key=True)
     travel_type = models.CharField(max_length=50, choices=TravelTypes.choices, default=TravelTypes.DAILY)
+    target_boundary=models.IntegerField(default=1000)
 
     def __str__(self):
         return f"Taxi ID: {str(self.taxi_id)}, Plate Number: {str(self.plate_number)}"
 
 
 
-class Boundary(models.Model):
-    boundary_id = models.AutoField(primary_key=True)
+class Dispatch(models.Model):
+    
+
+    class StatusChoices(models.TextChoices):
+        GOOD="good"
+        NEEDMAINTENANCE="need maintenance"
+        
+    class ParkedOrDispatchChoices(models.TextChoices):
+        PARK="park"
+        DISPATCH="dispatch"
+        
+
+    dispatch_id = models.AutoField(primary_key=True)
+    park_or_dispatch=models.CharField(max_length=20, choices=ParkedOrDispatchChoices.choices, blank=False, null=False);
     driver = models.ForeignKey('Driver', models.DO_NOTHING, blank=False, null=False)
-    amount = models.IntegerField()
-    date = models.DateField()
+    taxi = models.ForeignKey('Taxi', models.DO_NOTHING, blank=False, null=False)
+    status = models.CharField(choices=StatusChoices.choices, default=StatusChoices.GOOD)
+    boundary = models.IntegerField()
+    gas=models.DecimalField(max_digits=10, decimal_places=2)
+    date_and_time = models.DateTimeField()
+    image = models.URLField(default="", null=True)
+    is_short = models.BooleanField(default=False)
+    gas_deficit = models.DecimalField(default=0, max_digits=10, decimal_places=2)
 
 
 

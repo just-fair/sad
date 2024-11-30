@@ -16,20 +16,20 @@ const Tile = ({ taxi }) => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const handleViewButton = async () => {
-    try {
-      const res = await api.get(`/taxis/${taxi.taxi_id}/`);
+  // const handleViewButton = async () => {
+  //   try {
+  //     const res = await api.get(`/taxis/${taxi.taxi_id}/`);
 
-      // if (res.status === 200) {
-      //   return navigate(`details/${driver.driver_id}`, {
-      //     state: { driver: res.data, editable: false },
-      //   });
-      // }
-    } catch (error) {
-      console.log(error);
-      alert(error);
-    }
-  };
+  //     if (res.status === 200) {
+  //       return navigate(`details/${driver.driver_id}`, {
+  //         state: { driver: res.data, editable: false },
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     alert(error);
+  //   }
+  // };
 
   const cardBackgroundColor =
     theme.palette.mode === "dark" ? "#424242" : "#f9f9f9";
@@ -37,7 +37,7 @@ const Tile = ({ taxi }) => {
   return (
     <Card
       sx={{
-        width: "300px",
+        width: "100%",
         height: "200px",
         display: "flex",
         alignItems: "center",
@@ -51,9 +51,9 @@ const Tile = ({ taxi }) => {
       <CardMedia
         component="img"
         sx={{
-          width: "120px",
+          width: "30%",
           height: "100%",
-          objectFit: "cover",
+          objectFit: "contain",
           objectPosition: "center",
         }}
         src="https://thesantiagoairport.com/wp-content/uploads/2024/02/Santiago-Airport-Taxi.jpg"
@@ -96,7 +96,11 @@ const Tile = ({ taxi }) => {
               bgcolor: colors.green[600],
               textTransform: "none",
             }}
-            //   onClick={handleViewButton}
+            onClick={() => {
+              navigate(`details/${taxi.taxi_id}`, {
+                state: { editable: false },
+              });
+            }}
           >
             View Details
           </Button>

@@ -54,7 +54,9 @@ const AddDriver = () => {
   const [editable, setEditable] = useState(editMode); // Controls field editability
   const [taxiOptions, setTaxiOptions] = useState([]);
 
-  const [formikTypeOfDriver, setFormikTypeOfDriver] = useState("daily");
+  const [formikTypeOfDriver, setFormikTypeOfDriver] = useState(
+    driver?.type_of_driver || "daily"
+  );
 
   const [showSaveCancelBtn, setShowSaveCancelBtn] = useState(false);
 
@@ -62,6 +64,7 @@ const AddDriver = () => {
     console.log(driver);
     // isipan ng way pano ifilter yung available na taxi base sa type of driver
     const maxDriver = formikTypeOfDriver === "daily" ? 0 : 1;
+    console.log(formikTypeOfDriver);
 
     const availableTaxis = taxis.filter((taxi) => {
       if (formikTypeOfDriver === "daily") {
@@ -93,7 +96,7 @@ const AddDriver = () => {
       date_started: new Date().toISOString().split("T")[0],
       birthday: "",
     },
-    taxi: null,
+    taxi_id: "",
     license_number: "",
     type_of_driver: "daily",
     pondo: 0,
@@ -112,12 +115,14 @@ const AddDriver = () => {
       role: yup.string().required("First Name is Required"),
       date_started: yup.date().required("Date started is Required"),
     }),
-    taxi: yup.object(),
+    taxi_id: yup.string().notRequired().nullable(),
     license_number: yup.string().required("Please provide license number"),
     pondo: yup.string().required("Please put amount in Pondo"),
   });
 
   const handleSubmit = async (values) => {
+    console.log(values);
+
     try {
       const res = await api.post("/drivers/", values);
 
@@ -163,6 +168,7 @@ const AddDriver = () => {
   };
 
   const handleCancel = (resetForm) => {
+    setFormikTypeOfDriver(driver?.type_of_driver || "daily");
     resetForm();
     setEditable(false);
     setShowSaveCancelBtn(false);
@@ -189,7 +195,7 @@ const AddDriver = () => {
         <IconButton
           sx={{ width: "70px", mb: "30px" }}
           onClick={() => {
-            navigate(-1);
+            navigate(-1, { state: { refresh: Date.now() } });
           }}
         >
           <CloseIcon fontSize="large" />
@@ -469,10 +475,10 @@ const AddDriver = () => {
                 disabled={!editable}
               />
 
-              <Autocomplete
+              {/* <Autocomplete
                 options={taxiOptions}
                 getOptionLabel={(option) => option.plate_number}
-                onChange={(e, value) => setFieldValue("taxi", value)}
+                onChange={(e, value) => setFieldValue("taxi", e.target.value)}
                 value={values.taxi}
                 renderInput={(params) => (
                   <TextField
@@ -485,7 +491,51 @@ const AddDriver = () => {
                 )}
                 sx={{ gridColumn: "span 2" }}
                 disabled={!editable}
-              />
+              /> */}
+              <FormControl
+                fullWidth
+                variant="filled"
+                sx={{ gridColumn: "span 1" }}
+              >
+                <InputLabel>Taxi</InputLabel>
+                <Select
+                  name="taxi_id"
+                  value={
+                    driver ? values.taxi_details?.taxi_id || "" : values.taxi_id
+                  }
+                  onChange={(e) => {
+                    const selectedTaxiId = e.target.value;
+                    setFieldValue("taxi_id", selectedTaxiId);
+
+                    const selectedTaxi = taxiOptions.find(
+                      (taxi) => taxi.taxi_id === selectedTaxiId
+                    );
+                    setFieldValue("taxi_details", selectedTaxi);
+
+                    console.log(e.target.value);
+                  }} // set only the taxi_id
+                  onBlur={handleBlur}
+                  error={!!touched.taxi_id && !!errors.taxi_id}
+                  disabled={!editable}
+                >
+                  {driver?.taxi_details && (
+                    <MenuItem
+                      value={values.taxi_details.taxi_id}
+                      // selected={true}
+                    >
+                      {values.taxi_details.plate_number}
+                    </MenuItem>
+                  )}
+                  {taxiOptions.map((taxi) => (
+                    <MenuItem key={taxi.taxi_id} value={taxi.taxi_id}>
+                      {taxi.plate_number}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.taxi_id && errors.taxi_id && (
+                  <Typography color="error">{errors.taxi_id}</Typography>
+                )}
+              </FormControl>
 
               <TextField
                 fullWidth

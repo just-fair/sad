@@ -39,7 +39,7 @@ const Tile = ({ driver }) => {
   return (
     <Card
       sx={{
-        width: "400px",
+        width: "100%",
         height: "200px",
         display: "flex",
         alignItems: "center",
@@ -76,18 +76,26 @@ const Tile = ({ driver }) => {
           <Typography variant="subtitle2" sx={{ marginBottom: "8px" }}>
             {role.charAt(0).toUpperCase() + role.slice(1)}
           </Typography>
-          <Typography sx={{ fontSize: "14px" }}>
-            <b>Taxi:</b> {driver.taxi.brand}
-          </Typography>
-          <Typography sx={{ fontSize: "14px" }}>
-            <b>Model:</b> {driver.taxi.model}
-          </Typography>
-          <Typography sx={{ fontSize: "14px" }}>
-            <b>Year Model:</b> {driver.taxi.release_year}
-          </Typography>
-          <Typography sx={{ fontSize: "14px" }}>
-            <b>Plate Number:</b> {driver.taxi.plate_number}
-          </Typography>
+          {driver.taxi !== null ? (
+            <>
+              <Typography sx={{ fontSize: "14px" }}>
+                <b>Taxi:</b> {driver.taxi.brand}
+              </Typography>
+              <Typography sx={{ fontSize: "14px" }}>
+                <b>Model:</b> {driver.taxi.model}
+              </Typography>
+              <Typography sx={{ fontSize: "14px" }}>
+                <b>Year Model:</b> {driver.taxi.release_year}
+              </Typography>
+              <Typography sx={{ fontSize: "14px" }}>
+                <b>Plate Number:</b> {driver.taxi.plate_number}
+              </Typography>
+            </>
+          ) : (
+            <>
+              <h3>Taxi not yet assigned</h3>
+            </>
+          )}
         </CardContent>
         <CardActions sx={{ marginTop: "8px", padding: "0" }}>
           <Button

@@ -5,9 +5,9 @@ from rest_framework import permissions, generics
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import Employee, Driver, Taxi, Boundary, Contribution, OfficeStaff
+from .models import Employee, Driver, Taxi,Dispatch, Contribution, OfficeStaff
 from django.contrib.auth.models import User
-from .serializers import EmployeeSerializer, DriverSerializer, TaxiSerializer, BoundarySerializer, ContributionSerializer, EmployeeLimitedDetailsSerializer, DriverLimitedDetailsSerializer, UserSerializer, CustomTokenPairSerializer, OfficeStaffSerializer
+from .serializers import EmployeeSerializer, DriverSerializer, TaxiSerializer, DispatchSerializer, ContributionSerializer, EmployeeLimitedDetailsSerializer, DriverLimitedDetailsSerializer, UserSerializer, CustomTokenPairSerializer, OfficeStaffSerializer
 import os
 from dotenv import load_dotenv
 from imagekitio import ImageKit
@@ -79,15 +79,25 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if not ids:
             return Response({"message": "No Data provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        deleted_count, deleted_objects = Employee.objects.filter(employee_id__in=ids).delete()
+        employees_to_delete = Employee.objects.filter(employee_id__in=ids)
 
-        print(deleted_count)
-        print(deleted_objects)
+        # Delete related User instances before deleting Employee instances
+        for employee in employees_to_delete:
+            if employee.user:
+                employee.user.delete()  
+
+        deleted_count, deleted_objects = employees_to_delete.delete()
 
         return Response(
             {"message": f"{deleted_count} employees deleted successfully."},
             status=status.HTTP_200_OK
         )
+    
+    def perform_destroy(self, instance):
+        # Delete the related User instance if it exists
+        if instance.user:
+            instance.user.delete()
+        super().perform_destroy(instance)
     
 class OfficeViewSet(viewsets.ModelViewSet):
     queryset = OfficeStaff.objects.all().select_related("employee")
@@ -123,8 +133,16 @@ class OfficeViewSet(viewsets.ModelViewSet):
         )
 
 class DriverViewSet(viewsets.ModelViewSet):
-    queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
+    
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Driver.objects.all().prefetch_related("employee", "taxi").order_by("employee__employee_id");
+        taxi_id = self.request.query_params.get("taxi");
+    
+        if taxi_id:
+            queryset = queryset.filter(taxi=taxi_id)
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -136,6 +154,20 @@ class TaxiViewSet(viewsets.ModelViewSet):
     queryset = Taxi.objects.all()
     serializer_class = TaxiSerializer
     permission_classes = [IsAuthenticated]
+
+class DispatchViewSet(viewsets.ModelViewSet):
+    # queryset = Dispatch.objects.all().prefetch_related("driver", "taxi").order_by("date_and_time")
+    serializer_class=DispatchSerializer
+    permission_classes=[AllowAny]
+
+    def get_queryset(self):
+        queryset = Dispatch.objects.all().prefetch_related("driver", "taxi").order_by("-date_and_time")
+        taxi_id = self.request.query_params.get("taxi");
+    
+        if taxi_id:
+            queryset = queryset.filter(taxi=taxi_id)    
+        return queryset
+
 
 # # getting a detailed single employee
 # class EmployeeDetailsView(generics.RetrieveUpdateDestroyAPIView):

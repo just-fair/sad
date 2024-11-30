@@ -1,6 +1,6 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers, exceptions
-from .models import Employee, Driver, Taxi, Boundary, Contribution, OfficeStaff
+from .models import Employee, Driver, Taxi, Dispatch, Contribution, OfficeStaff
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 
@@ -43,19 +43,35 @@ class UserSerializer(serializers.ModelSerializer):
                     taxi_permissions = Permission.objects.filter(codename__in=["add_taxi", "change_taxi", "delete_taxi", "view_taxi"])
                     user_permissions = Permission.objects.filter(codename__in=["add_user", "change_user", "delete_user", "view_user"])
                     contribution_permissions = Permission.objects.filter(codename__in=["add_contribution", "change_contribution", "delete_contribution", "view_contribution"])
-                    boundary_permissions = Permission.objects.filter(codename__in=["add_boundary", "change_boundary", "delete_boundary", "view_boundary"])
+                    dispatch_permissions = Permission.objects.filter(codename__in=["delete_dispatch", "view_dispatch"])
                     logentry_permissions = Permission.objects.filter(codename__in=["add_logentry","view_logentry"])
 
 
-                    all_permissions = list(employee_permissions) + list(driver_permissions) + list(officestaff_permissions) + list(taxi_permissions) + list(user_permissions) + list(contribution_permissions) + list(boundary_permissions) + list(logentry_permissions)
+                    all_permissions = list(employee_permissions) + list(driver_permissions) + list(officestaff_permissions) + list(taxi_permissions) + list(user_permissions) + list(contribution_permissions) + list(dispatch_permissions) + list(logentry_permissions)
                     admin_group.permissions.set(all_permissions)
 
 
                     user.groups.add(admin_group)
+            elif role == "office staff" and employee.officestaff.office_role == OfficeStaff.OfficeRoleChoices.DISPATCHER:
+                dispatcher_group, created = Group.objects.get_or_create(name="Dispatcher")
+                if created:
+                    employee_permissions = Permission.objects.filter(codename__in=["view_employee"])
+                    driver_permissions = Permission.objects.filter(codename__in=["view_driver"])
+                    taxi_permissions = Permission.objects.filter(codename__in=["change_taxi", "view_taxi"])
+                    contribution_permissions = Permission.objects.filter(codename__in=["add_contribution", "change_contribution", "delete_contribution", "view_contribution"])
+                    dispatch_permissions = Permission.objects.filter(codename__in=["delete_dispatch", "view_dispatch"])
+                    logentry_permissions = Permission.objects.filter(codename__in=["add_logentry","view_logentry"])
+
+
+                    all_permissions = list(employee_permissions) + list(driver_permissions) + list(taxi_permissions)  + list(contribution_permissions) + list(dispatch_permissions) + list(logentry_permissions)
+                    dispatcher_group.permissions.set(all_permissions)
+
+
+                    user.groups.add(dispatcher_group)
             elif role == "driver":
                 driver_group, created = Group.objects.get_or_create(name="Driver")
                 if created:
-                    permissions = Permission.objects.filter(codename__in=["view_employee", "view_driver", "view_taxi", "view_user", "view_contribution", "view_boundary"])
+                    permissions = Permission.objects.filter(codename__in=["view_employee", "view_driver", "view_taxi", "view_user", "view_contribution", "view_dispatch"])
                     driver_group.permissions.set(permissions)
                     user.groups.add(driver_group)
             else:
@@ -85,8 +101,18 @@ class CustomTokenPairSerializer(TokenObtainPairSerializer):
             return data
 
         employee = self.user.employee;
-        data["user_data"]=EmployeeSerializer(employee).data
-        return data
+        if(getattr(employee, "role")=="driver"):
+            driver_details = Driver.objects.filter(employee=employee).prefetch_related("taxi", "employee").first()
+            print(driver_details) 
+            data["user_data"]=DriverSerializer(driver_details).data
+            return data
+        elif (getattr(employee, "role")=="office staff"):
+            office_staff_details = OfficeStaff.objects.filter(employee=employee).prefetch_related("employee").first()
+            office_staff_role = getattr(office_staff_details, "office_role");
+            if(office_staff_role == "admin" or office_staff_role=="dispatcher"):
+                data["user_data"]=OfficeStaffSerializer(office_staff_details).data
+                return data
+        
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -192,53 +218,68 @@ class DriverLimitedDetailsSerializer(serializers.ModelSerializer):
 
 class DriverSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer()
-    taxi = TaxiSerializer()
-
+    taxi = serializers.PrimaryKeyRelatedField(queryset=Taxi.objects.all(), required=False, allow_null=True, write_only=True)
+    taxi_details = TaxiSerializer(source='taxi', read_only=True)
     
-
     class Meta:
-        model=Driver
-        fields='__all__'
+        model = Driver
+        fields = '__all__'
+        extra_fields = ['taxi_details']
+
+    def to_representation(self, instance):
+        # Add taxi details in the serialized data for GET request
+        ret = super().to_representation(instance)
+        if self.context['request'].method in ['GET']:
+            ret['taxi_details'] = TaxiSerializer(instance.taxi).data if instance.taxi else None
+        return ret
+
+
+    # def to_representation(self, instance):
+    #     # Add taxi plate_number in the serialized data for GET request
+    #     ret = super().to_representation(instance)
+    #     if self.context['request'].method in ['GET']:
+    #         ret['taxi_id'] = instance.taxi.plate_number if instance.taxi else None
+    #     return ret
 
     def validate(self, data):
-        instance_taxi_id = instance_taxi_id= getattr(self.instance.taxi, "taxi_id", None) if self.instance else None
-        taxi_id = self.initial_data.get("taxi").get("taxi_id")
-
-        if instance_taxi_id == taxi_id:
-            
-            return data
+        taxi_id = self.initial_data.get("taxi_id", None)  # Get the taxi_id from the request data
         
+        if not taxi_id:
+            return data  # No taxi provided, so validation is complete
+        
+        instance_taxi_id = getattr(self.instance, "taxi_id", None) if self.instance else None
+
+        # Skip validation if taxi is the same as before
+        if instance_taxi_id == taxi_id:
+            return data
+
+        # Validation for assigning taxi to an alternate or daily driver
         drivers = Driver.objects.filter(taxi=taxi_id)
-        print(drivers)
         if data.get("type_of_driver") == Driver.DriverTypes.ALTERNATE:
             if drivers.exists():
                 if drivers.count() == 1:
                     if drivers[0].type_of_driver == Driver.DriverTypes.ALTERNATE:
                         return data 
                     else:
-                        raise ValidationError("Taxi has currenly assigned to a daily driver")
+                        raise serializers.ValidationError("Taxi is currently assigned to a daily driver")
                 else:
-                    raise ValidationError("Taxi has currenly assigned to 2 alternate drivers")
+                    raise serializers.ValidationError("Taxi is currently assigned to 2 alternate drivers")
             else:
                 return data
-        else:
-            print(type(drivers))
+        else:  # If it's a daily driver
             if drivers.exists():
-                raise ValidationError("Taxi is currently assigned to a driver")
+                raise serializers.ValidationError("Taxi is currently assigned to a driver")
             else:
                 return data
-                
-                
-
-
 
     def create(self, validated_data):
         employee_data = validated_data.pop("employee", None)
+        taxi_id = self.initial_data.pop("taxi_id", None)
+
+        # Handle employee data, create or retrieve employee
         employee = None
-        
-        if employee_data is not None:
-            employee_id = self.initial_data.get("employee").get("employee_id")
-            print(f"EMPLOYEE DATA : {employee_id}")
+        if employee_data:
+            employee_id = self.initial_data.get("employee", {}).get("employee_id")
             try:
                 employee = Employee.objects.get(employee_id=employee_id)
                 setattr(employee, "driver", self.initial_data.get("driver_id"))
@@ -246,51 +287,95 @@ class DriverSerializer(serializers.ModelSerializer):
             except Employee.DoesNotExist:
                 employee = Employee.objects.create(**employee_data)
 
+        # Handle taxi data, retrieve existing taxi or assign None
+        taxi = None
+        if taxi_id:
+            taxi = Taxi.objects.get(pk=taxi_id)
+            type_of_driver = validated_data.pop("type_of_driver", None)
 
-        taxi_data = validated_data.pop("taxi", None)
-        taxi=None
-        
-        if taxi_data is not None:
-            taxi_id = self.initial_data.get("taxi").get("taxi_id")
-            try:
-                taxi = Taxi.objects.get(pk=taxi_id)
-                setattr(taxi, "driver", validated_data.get("driver"))
-                taxi.save()
-            except Taxi.DoesNotExist:
-                taxi = Taxi.objects.create(**taxi_data)
-                # raise serializers.ValidationError("Gumagawa ng bagong TAXI")
-            
+            if type_of_driver == "alternate":
+                taxi.travel_type="alternate"
 
-        driver = Driver.objects.create(employee = employee, taxi = taxi, **validated_data)
+        # Create the driver with the assigned employee and taxi
+        driver = Driver.objects.create(employee=employee, taxi=taxi, **validated_data)
         return driver
 
-        
-        
-
     def update(self, instance, validated_data):
-
         employee_data = validated_data.pop("employee", None)
         if employee_data:
             for atr, value in employee_data.items():
                 setattr(instance.employee, atr, value)
             instance.employee.save()
 
-        taxi_data = validated_data.pop("taxi", None)
-        if taxi_data:
-            for atr, value in taxi_data.items():
-                setattr(instance.taxi, atr, value)
-            instance.taxi.save()
+        taxi_id = self.initial_data.pop("taxi_id", None)
         
+        if taxi_id and taxi_id != instance.taxi_id:
+            instance.taxi_id = taxi_id
+        
+        new_type_of_driver = validated_data.get("type_of_driver")
+        if new_type_of_driver and new_type_of_driver != instance.type_of_driver:
+            # If a new taxi is being assigned or the type_of_driver is changing
+            if taxi_id:
+                taxi = Taxi.objects.get(pk=taxi_id)
+            else:
+                taxi = instance.taxi  # Use the currently assigned taxi
+
+            # Update travel_type only if type_of_driver has changed
+            if new_type_of_driver == "alternate":
+                taxi.travel_type = "alternate"
+
+            taxi.save()
+
+
+            # if taxi_id:
+            #     taxi = Taxi.objects.get(pk=taxi_id)
+            #     if validated_data.get("type_of_driver") == "alternate":
+            #         taxi.travel_type="alternate"
+            #     instance.taxi_id = taxi_id
+            #     instance.taxi.save()
+
         for atr, value in validated_data.items():
+            
             setattr(instance, atr, value)
         instance.save()
         return instance
 
 
-class BoundarySerializer(serializers.ModelSerializer):
+class DispatchSerializer(serializers.ModelSerializer):
+    taxi=serializers.PrimaryKeyRelatedField(queryset=Taxi.objects.all(),write_only=True)
+    driver=serializers.PrimaryKeyRelatedField(queryset=Driver.objects.all(),write_only=True)
+
+    taxi_details = TaxiSerializer(source='taxi', read_only=True)
+    driver_details = DriverSerializer(source='driver', read_only=True)
+    
+
     class Meta:
-        model=Boundary
+        model=Dispatch
         fields='__all__'
+        extra_fields = ['taxi_details', 'driver_details']
+
+
+    def update_taxi_condition(self, park_or_dispatch, taxi):
+        if park_or_dispatch == Dispatch.ParkedOrDispatchChoices.PARK:
+            taxi.condition = Taxi.Condition.PARKED
+        elif park_or_dispatch == Dispatch.ParkedOrDispatchChoices.DISPATCH:
+            taxi.condition = Taxi.Condition.DEPLOYED
+        taxi.save()
+
+    def create(self, validated_data):
+        taxi = Taxi.objects.get(pk=self.initial_data.pop("taxi"))
+        park_or_dispatch = validated_data['park_or_dispatch']
+        self.update_taxi_condition(park_or_dispatch, taxi)
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        # Add taxi details in the serialized data for GET request
+        print(self.context.get("request"))
+        ret = super().to_representation(instance)
+        if self.context['request'].method == ['GET']:
+            ret['taxi_details'] = TaxiSerializer(instance.taxi).data if instance.taxi else None
+            ret['driver_details'] = DriverSerializer(instance.driver).data if instance.driver else None
+        return ret
 
 
 class ContributionSerializer(serializers.ModelSerializer):

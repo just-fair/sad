@@ -10,10 +10,13 @@ import {
 } from "@mui/material";
 import Header from "../../components/Header";
 import Tile from "./Tile";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import Grid from "@mui/material/Grid2";
+import Suggestions from "./Suggestions";
 
 const TaxiTiles = () => {
   const { taxis } = useOutletContext();
+  const navigate = useNavigate();
   return (
     <Box>
       <Box
@@ -34,21 +37,25 @@ const TaxiTiles = () => {
           Add
         </Button>
       </Box>
+      <Box>
+        <Suggestions taxis={taxis} />
+      </Box>
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "20px",
-          overflow: "auto",
-          //   justifyContent: "center",
-          //   alignItems: "center",
-          //   gap: "10px",
-          //   flexWrap: "wrap",
+          // display: "grid",
+          // gridTemplateColumns: "repeat(3, 1fr)",
+          // gap: "20px",
+          // overflow: "auto",
+          flexGrow: 1,
         }}
       >
-        {taxis.map((taxi) => (
-          <Tile taxi={taxi} key={taxi.taxi_id} />
-        ))}
+        <Grid container spacing={3}>
+          {taxis.map((taxi) => (
+            <Grid size={{ xs: 12, md: 6, lg: 4, xl: 3 }} key={taxi.taxi_id}>
+              <Tile taxi={taxi} />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     </Box>
   );

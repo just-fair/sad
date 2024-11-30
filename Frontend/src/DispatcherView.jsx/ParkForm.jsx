@@ -47,7 +47,7 @@ const ParkForm = () => {
   };
 
   const handleCancel = () => {
-    navigate("/");
+    navigate("/dispatcher");
   };
 
   return (

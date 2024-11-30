@@ -126,7 +126,11 @@ const SideBar = () => {
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  // src={`../../assets/user.png`}
+                  src={
+                    user
+                      ? user.employee.image
+                      : `https://i0.wp.com/therightpathok.org/wp-content/uploads/2019/05/male-silhouette-copy.jpg?fit=300%2C240&ssl=1`
+                  }
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -136,7 +140,7 @@ const SideBar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  {user ? user.first_name : "Super Admin"}
+                  {user ? user.employee.first_name : "Super Admin"}
                 </Typography>
                 <Typography variant="h5">Administrator</Typography>
               </Box>

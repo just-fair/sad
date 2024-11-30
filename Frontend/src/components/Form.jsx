@@ -67,9 +67,11 @@ const Form = ({ route, method }) => {
 
         saveUserData(res.data);
 
-        if (res.data.user_data.role === "office staff") {
+        if (res.data.user_data.office_role === "admin") {
           return navigate("/");
-        } else if (res.data.user_data.role === "driver") {
+        } else if (res.data.user_data.office_role === "dispatcher") {
+          return navigate("/dispatcher");
+        } else {
           return navigate("/driver");
         }
       } else if (method === "register") {
