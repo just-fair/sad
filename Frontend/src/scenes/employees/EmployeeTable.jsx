@@ -1,4 +1,11 @@
-import { Box, colors, Typography, useTheme, Button } from "@mui/material";
+import {
+  Box,
+  colors,
+  Typography,
+  useTheme,
+  Button,
+  Paper,
+} from "@mui/material";
 import {
   DataGrid,
   GridToolbar,
@@ -206,11 +213,8 @@ const EmployeesTable = () => {
   };
 
   return (
-    <Box
-      borderRadius="20px"
-      p="20px"
-      m="30px"
-      sx={{ position: "relative", bgcolor: theme.palette.background.paper }}
+    <Paper
+      sx={{ position: "relative", borderRadius: "20px", p: "20px", m: "30px" }}
     >
       <Header
         title="Employees"
@@ -219,7 +223,7 @@ const EmployeesTable = () => {
       <Box
         m="30px 0 0 0"
         width="100%"
-        height="68vh"
+        height="90vh"
         sx={{
           overflow: "hidden",
           "& .MuiDataGrid-root": {
@@ -271,7 +275,7 @@ const EmployeesTable = () => {
           }}
         />
       </Box>
-    </Box>
+    </Paper>
   );
 };
 

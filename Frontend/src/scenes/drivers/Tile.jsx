@@ -58,7 +58,10 @@ const Tile = ({ driver }) => {
           objectFit: "cover",
           objectPosition: "center",
         }}
-        src={driver.employee.image}
+        src={
+          driver.employee.image ||
+          `https://i0.wp.com/therightpathok.org/wp-content/uploads/2019/05/male-silhouette-copy.jpg?fit=300%2C240&ssl=1`
+        }
         alt="Driver image"
       />
       <Box sx={{ flex: 1, padding: "16px" }}>

@@ -1,24 +1,30 @@
-import { Box } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import React from "react";
 import Header from "../../components/Header";
 import Avatar from "@mui/material/Avatar";
 
 const DriverProfile = ({ driver }) => {
   return (
-    <Box width="100%" p="20px">
+    <Box
+      sx={{
+        width: "100%",
+        p: "20px",
+      }}
+    >
       <Box>
         <Header title="Driver Details" />
       </Box>
 
-      <Box
+      <Paper
         sx={{
           display: "flex",
           alignItems: "center",
           width: "100%",
           gap: "50px",
+          p: "20px",
         }}
       >
-        <Box>
+        <Box sx={{ alignSelf: "flex-start" }}>
           <Avatar
             alt="Drivers picture"
             src={driver.employee.image}
@@ -43,7 +49,7 @@ const DriverProfile = ({ driver }) => {
             </Box>
           </Box>
         </Box>
-      </Box>
+      </Paper>
     </Box>
   );
 };

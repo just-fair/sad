@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import taxiImage from "../../../src/assets/Taxi-Milano.png";
 
 const Tile = ({ taxi }) => {
   const theme = useTheme();
@@ -56,7 +57,7 @@ const Tile = ({ taxi }) => {
           objectFit: "contain",
           objectPosition: "center",
         }}
-        src="https://thesantiagoairport.com/wp-content/uploads/2024/02/Santiago-Airport-Taxi.jpg"
+        src={taxiImage}
         alt="Taxi image"
       />
       <Box sx={{ flex: 1, padding: "16px" }}>

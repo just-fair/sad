@@ -113,7 +113,7 @@ class Taxi(models.Model):
     day_of_coding = models.CharField(max_length=10, choices=DaysOfWeek.choices, default=DaysOfWeek.MONDAY)
     taxi_id = models.AutoField(primary_key=True)
     travel_type = models.CharField(max_length=50, choices=TravelTypes.choices, default=TravelTypes.DAILY)
-    target_boundary=models.IntegerField(default=1000)
+    target_boundary=models.DecimalField(default=1000.00, max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"Taxi ID: {str(self.taxi_id)}, Plate Number: {str(self.plate_number)}"
@@ -137,14 +137,15 @@ class Dispatch(models.Model):
     driver = models.ForeignKey('Driver', models.DO_NOTHING, blank=False, null=False)
     taxi = models.ForeignKey('Taxi', models.DO_NOTHING, blank=False, null=False)
     status = models.CharField(choices=StatusChoices.choices, default=StatusChoices.GOOD)
-    boundary = models.IntegerField()
+    boundary = models.DecimalField(null=True, default=None, max_digits=10, decimal_places=2)
     prev_gas=models.DecimalField(default=0.00, max_digits=4, decimal_places=2)
-    current_gas=models.DecimalField(default=0.00, max_digits=4, decimal_places=2)
-    time_in= models.DateTimeField(auto_now_add=True)
-    time_out= models.DateTimeField(default=None, null=True, blank=True)
-    image = models.URLField(default="", null=True)
-    is_short = models.BooleanField(default=False)
-    gas_deficit = models.DecimalField(default=0, max_digits=10, decimal_places=2)
+    current_gas=models.DecimalField(null=True, default=None, max_digits=4, decimal_places=2)
+    time_in= models.DateTimeField(default=None, null=True, blank=True)
+    time_out= models.DateTimeField(auto_now_add=True)
+    image = models.URLField(default="None", null=True, blank=True)
+    is_short = models.BooleanField(default=None, null=True)
+    short_amount = models.DecimalField(default=None, null=True, max_digits=10, decimal_places=2)
+    gas_deficit = models.DecimalField(default=None, null=True, max_digits=10, decimal_places=2)
 
 
 

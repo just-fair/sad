@@ -369,6 +369,17 @@ class DispatchSerializer(serializers.ModelSerializer):
         self.update_taxi_condition(park_or_dispatch, taxi)
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        taxi = Taxi.objects.get(pk=self.initial_data.pop("taxi", None))
+        park_or_dispatch = validated_data.get('park_or_dispatch', instance.park_or_dispatch)
+
+       
+        if park_or_dispatch != instance.park_or_dispatch:
+            self.update_taxi_condition(park_or_dispatch, taxi)
+
+        
+        return super().update(instance, validated_data)
+
     def to_representation(self, instance):
         # Add taxi details in the serialized data for GET request
         print(self.context.get("request"))

@@ -186,7 +186,7 @@ class DispatchViewSet(viewsets.ModelViewSet):
     permission_classes=[AllowAny]
 
     def get_queryset(self):
-        queryset = Dispatch.objects.all().prefetch_related("driver", "taxi").order_by("-date_and_time")
+        queryset = Dispatch.objects.all().prefetch_related("driver", "taxi").order_by("-time_in")
         taxi_id = self.request.query_params.get("taxi");
     
         if taxi_id:

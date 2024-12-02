@@ -22,8 +22,27 @@ body{
     margin: 0;
 }
 
-.content{
-    overflow: hidden;
+body, #root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* Ensures no scrollbars */
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent scrolling for the entire content */
+}
+
+.content > :first-child {
+    flex-shrink: 0; /* Ensure Topbar or any fixed header doesn't shrink */
+}
+
+.content > :last-child {
+    flex-grow: 1; /* Allow Outlet to grow and take the remaining space */
+    overflow-y: auto; /* Make Outlet scrollable */
 }
 
 .app{

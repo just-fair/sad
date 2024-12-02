@@ -6,7 +6,7 @@ import {
   Link,
 } from "react-router-dom";
 import api from "../../api";
-import { Tabs, Tab, Box } from "@mui/material";
+import { Tabs, Tab, Box, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 
 export const driversLoader = async () => {
@@ -25,6 +25,7 @@ export const driversLoader = async () => {
 const Drivers = () => {
   const [drivers, setDrivers] = useState(useLoaderData());
   const location = useLocation();
+  const theme = useTheme();
 
   useEffect(() => {
     const refreshDrivers = async () => {
@@ -56,6 +57,7 @@ const Drivers = () => {
       <Box sx={{ width: "100%" }}>
         <Tabs
           sx={{
+            color: theme.palette.text.primary,
             "& .MuiTabs-indicator": {
               backgroundColor: "green", // Change indicator color
               color: "green",
@@ -71,7 +73,6 @@ const Drivers = () => {
         >
           <Tab
             sx={{
-              color: "gray", // Default text color
               "&.Mui-selected": {
                 color: "green", // Change text color when selected
               },
@@ -83,7 +84,7 @@ const Drivers = () => {
           />
           <Tab
             sx={{
-              color: "gray", // Default text color
+              color: "white", // Default text color
               "&.Mui-selected": {
                 color: "green", // Change text color when selected
               },

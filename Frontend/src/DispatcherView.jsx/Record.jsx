@@ -13,7 +13,11 @@ const Record = ({ record }) => {
         <Box sx={{ display: "flex", gap: "15px" }}>
           <Box sx={{ width: "32%" }}>
             <Typography variant="p">
-              {moment(record.date_and_time).format("MMMM D, YYYY, h:mm A")}
+              {moment(
+                record.park_or_dispatch === "dispatch"
+                  ? record.time_out
+                  : record.time_in
+              ).format("MMMM D, YYYY, h:mm A")}
             </Typography>
           </Box>
           <Typography>{record.taxi_details.plate_number}</Typography>

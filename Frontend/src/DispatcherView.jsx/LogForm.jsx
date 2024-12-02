@@ -53,17 +53,45 @@ const LogForm = () => {
 
   const [formData, setFormData] = useState({
     park_or_dispatch: mode,
-    driver: mode === "park" ? drivers[0].driver_details.driver_id : "", // Expecting driver ID
+    driver: mode === "park" ? drivers[0].driver_details.driver_id : "",
     taxi: taxi.taxi_id,
-    status: "good", // Default value as per your model
-    gas: "",
-    boundary: 0,
-    date_and_time: formatLocalDateTime(new Date()),
-    image: null, // For file upload
-    is_short: true,
+    status: "good",
+    prev_gas: "",
+    current_gas: "",
+    boundary: "",
+    time_in: null,
+    time_out: formatLocalDateTime(new Date()),
+    image: "",
+    is_short: "",
+    short_amount: "",
+    gas_deficit: "",
   });
 
   useEffect(() => {
+    // const noNull = Object.fromEntries(
+    //   Object.entries(drivers[0]).map(([key, value]) => [
+    //     key,
+    //     value === null ? "" : value,
+    //   ])
+    // );
+
+    if (mode === "park") {
+      setFormData({
+        ...drivers[0],
+        ["park_or_dispatch"]: mode,
+        ["driver"]: drivers[0].driver_details.driver_id,
+        ["taxi"]: taxi.taxi_id,
+        ["time_in"]: formatLocalDateTime(new Date()),
+        ["time_out"]: formatLocalDateTime(new Date(drivers[0].time_out)),
+        // ["current_gas"]: "",
+        // ["time_in"]: drivers[0].time_in || "",
+        // ["is_short"]: drivers[0].is_short || "",
+        // ["short_amount"]: drivers[0].short_amount || "",
+        // ["gas_deficit"]: drivers[0].gas_deficit || "",
+      });
+    }
+    console.log(formData);
+
     const fetchDrivers = async () => {
       try {
         const res = await api.get(`/drivers/`);
@@ -90,19 +118,25 @@ const LogForm = () => {
     if (name === "image" && files.length > 0) {
       setFormData({ ...formData, [name]: files[0] });
     } else if (name === "boundary") {
-      if (value < taxi.target_boundary) {
-        setFormData({ ...formData, [name]: value, ["is_short"]: true });
-      }
-    } else if (name === "gas") {
-      if (mode === "park") {
-        if (value < drivers[0].gas) {
-          setFormData({
-            ...formData,
-            [name]: value,
-            ["gas_deficit"]: drivers[0].gas - value,
-          });
-        } else setFormData({ ...formData, [name]: value });
+      if (Number(value) <= Number(taxi.target_boundary)) {
+        setFormData({
+          ...formData,
+          [name]: value,
+          ["is_short"]: true,
+          ["short_amount"]: Number(taxi.target_boundary) - Number(value),
+        });
       } else setFormData({ ...formData, [name]: value });
+    } else if (name === "current_gas") {
+      // if (mode === "park") {
+
+      if (Number(value) <= Number(drivers[0].prev_gas)) {
+        setFormData({
+          ...formData,
+          [name]: value,
+          ["gas_deficit"]: Number(drivers[0].prev_gas) - Number(value),
+        });
+      } else setFormData({ ...formData, [name]: value });
+      // } else setFormData({ ...formData, [name]: value });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -113,10 +147,17 @@ const LogForm = () => {
     console.log(formData);
 
     try {
-      const res = await api.post("/dispatchment-history/", formData);
+      const res =
+        mode === "park"
+          ? await api.patch(
+              `/dispatchment-history/${drivers[0].dispatch_id}/`,
+              formData
+            )
+          : await api.post("/dispatchment-history/", formData);
+      console.log(res);
 
-      if (res.status === 201) {
-        alert("Dispatch created successfully!");
+      if (res.status === 201 || res.status === 200) {
+        alert("Dispatch record Saved");
         navigate("/dispatcher");
       }
     } catch (error) {
@@ -144,7 +185,7 @@ const LogForm = () => {
             onChange={handleChange}
             className="select"
             required
-            disabled={mode === "park" ? true : false}
+            disabled={mode === "park"}
           >
             <option value="">Select a driver</option>
             {mode === "park" && (
@@ -197,61 +238,128 @@ const LogForm = () => {
           </select>
         </div>
 
-        {mode === "park" && (
-          <div className="formGroup">
-            <label>Previous Gas (Liters):</label>
-            <input
-              disabled={true}
-              type="number"
-              name="prevGas"
-              value={drivers[0].gas}
-              onChange={handleChange}
-              className="input"
-              placeholder="Enter gas used/added"
-            />
-          </div>
-        )}
-
         <div className="formGroup">
-          <label>Current Gas (Liters)</label>
+          <label>
+            {mode === "park" ? "Previous Gas (Liters)" : "Gas (Liters)"}
+          </label>
           <input
+            disabled={mode === "park"}
             required
             type="number"
-            name="gas"
-            value={formData.gas}
+            name="prev_gas"
+            value={formData.prev_gas}
             onChange={handleChange}
             className="input"
-            placeholder="Enter gas used/added"
+            placeholder="Gas Before travel"
           />
         </div>
+
+        {mode === "park" && (
+          <>
+            {/* <div className="formGroup">
+              <label>Previous Gas (Liters):</label>
+              <input
+                editable={false}
+                type="Previo"
+                name="current_gas"
+                value={drivers[0].gas}
+                onChange={handleChange}
+                className="input"
+                placeholder="Gas After travel"
+              />
+            </div> */}
+            <div className="formGroup">
+              <label>Current Gas (Liters):</label>
+              <input
+                type="number"
+                name="current_gas"
+                // value={drivers[0].gas}
+                value={formData.current_gas || ""}
+                onChange={handleChange}
+                className="input"
+                placeholder="Gas After travel"
+              />
+            </div>
+
+            <div className="formGroup">
+              <label>Gas Deficit (Liters):</label>
+              <input
+                disabled={true}
+                type="number"
+                name="gas_deficit"
+                value={formData.gas_deficit || ""}
+                onChange={handleChange}
+                className="input"
+              />
+            </div>
+          </>
+        )}
 
         {/* Boundary */}
         {mode === "park" && (
+          <>
+            <div className="formGroup">
+              <label>Target Boundary (PHP):</label>
+              <input
+                disabled
+                type="number"
+                name="taxboundary"
+                value={drivers[0].taxi_details.target_boundary}
+                className="input"
+              />
+            </div>
+            <div className="formGroup">
+              <label>Boundary (PHP):</label>
+              <input
+                required
+                type="number"
+                name="boundary"
+                value={formData.boundary || ""}
+                onChange={handleChange}
+                className="input"
+                placeholder="Enter boundary amount"
+              />
+            </div>
+
+            <div className="formGroup">
+              <label>Short Amount (PHP):</label>
+              <input
+                disabled={true}
+                type="number"
+                name="short_amount"
+                value={formData.short_amount || ""}
+                // onChange={handleChange}
+                className="input"
+              />
+            </div>
+          </>
+        )}
+
+        {mode !== "park" && (
           <div className="formGroup">
-            <label>Boundary (PHP):</label>
+            <label>Date & Time out:</label>
             <input
-              required
-              type="number"
-              name="boundary"
-              value={formData.boundary}
+              type="datetime-local"
+              name="time_out"
+              value={formData.time_out}
               onChange={handleChange}
               className="input"
-              placeholder="Enter boundary amount"
             />
           </div>
         )}
 
-        {/* Date and Time */}
-        <div className="formGroup">
-          <label>Date and Time:</label>
-          <input
-            type="datetime-local"
-            name="date_and_time"
-            value={formData.date_and_time}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
+        {mode === "park" && (
+          <div className="formGroup">
+            <label>Date & Time in:</label>
+            <input
+              type="datetime-local"
+              name="time_in"
+              value={formData.time_in || ""}
+              onChange={handleChange}
+              className="input"
+            />
+          </div>
+        )}
 
         {/* Image */}
         {/* <div className="formGroup">

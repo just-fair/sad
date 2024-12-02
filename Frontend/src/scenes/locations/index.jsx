@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import taxiFill from "../../assets/taxi-fill.png";
+import car from "../../assets/car-top-view.png";
 
 const Locations = () => {
   const [drivers, setDrivers] = useState([]);
@@ -36,7 +36,7 @@ const MapComponent = ({ drivers }) => {
 
     // Define a custom car icon
     const carIcon = L.icon({
-      iconUrl: taxiFill, // Replace with the actual path to your car icon image
+      iconUrl: car, // Replace with the actual path to your car icon image
       iconSize: [32, 32], // Size of the icon
       iconAnchor: [16, 32], // Anchor point of the icon
       popupAnchor: [0, -32], // Anchor point for popup

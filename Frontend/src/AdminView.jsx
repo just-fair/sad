@@ -15,6 +15,7 @@ const App = () => {
           <SideBar />
           <main className="content">
             <Topbar />
+
             <Outlet />
           </main>
         </div>
