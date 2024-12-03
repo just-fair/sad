@@ -5,6 +5,7 @@ import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
 
 const AvailableTaxi = () => {
   const [availableTaxi, setAvailableTaxi] = useState([]);
+  const [allTaxi, setAllTaxi] = useState([]);
 
   useEffect(() => {
     const getAllTaxi = async () => {
@@ -33,6 +34,7 @@ const AvailableTaxi = () => {
           });
 
           setAvailableTaxi(available);
+          setAllTaxi(allTaxi);
         }
       } catch (error) {
         console.log(error);
@@ -47,7 +49,7 @@ const AvailableTaxi = () => {
     <>
       <TopBox
         icon={<LocalTaxiIcon fontSize="large" />}
-        value={availableTaxi.length}
+        value={`${availableTaxi.length} / ${allTaxi.length}`}
         title="Available Taxi"
       />
     </>

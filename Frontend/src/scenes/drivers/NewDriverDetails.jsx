@@ -22,7 +22,6 @@ const NewDriverDetails = () => {
   const driver = useLoaderData();
   return (
     <Box width="100%">
-      {/* <h1>NewDriverDetails</h1> */}
       <DriverProfile driver={driver} />
     </Box>
   );

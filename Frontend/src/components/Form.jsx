@@ -96,7 +96,7 @@ const Form = ({ route, method }) => {
   return (
     <Container maxWidth="sm">
       {loading && <h1>Loading...</h1>}
-      <Paper elevation={3} sx={{ p: 7, mt: 10, borderRadius: 6 }}>
+      <Paper elevation={3} sx={{ p: 7, borderRadius: 6 }}>
         <form noValidate autoComplete="off">
           <Box
             display="flex"

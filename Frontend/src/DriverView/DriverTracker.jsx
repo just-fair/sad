@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { UserContext } from "../context/UserContext";
 
 const DriverTracker = () => {
+  const { user } = useContext(UserContext);
   const [socket, setSocket] = useState(null);
 
   const startTracking = () => {
@@ -9,6 +11,10 @@ const DriverTracker = () => {
 
     socket.onopen = () => {
       console.log("WebSocket connection established.");
+
+      // const driverDetails = JSON.parse(localStorage.getItem("user"));
+      // const driverId = driverDetails?.driver_id || "default_id";
+
       if ("geolocation" in navigator) {
         // Enable high accuracy for better geolocation results
         navigator.geolocation.watchPosition(
@@ -18,7 +24,7 @@ const DriverTracker = () => {
             const { latitude, longitude } = position.coords;
             socket.send(
               JSON.stringify({
-                driver_id: "18", // Replace with dynamic driver ID if necessary
+                driver_id: user.driver_id, // Replace with dynamic driver ID if necessary
                 latitude,
                 longitude,
               })

@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import "../styles/dispatcherHome.css";
 import { Box } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import api from "../api";
+import moment from "moment";
 
 export const loader = async () => {
   try {
@@ -20,7 +21,7 @@ export const loader = async () => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const taxis = useLoaderData();
+  const [taxis, setTaxis] = useState(useLoaderData());
 
   const handleGoClick = (taxi) => {
     navigate(`log/${taxi.taxi_id}`, { state: { taxi, mode: "dispatch" } });
@@ -29,6 +30,17 @@ const Home = () => {
   const handleParkClick = (taxi) => {
     navigate(`park/${taxi.taxi_id}`, { state: { taxi, mode: "park" } });
   };
+
+  useEffect(() => {
+    const day = moment().format("dddd").toLowerCase();
+    console.log(day);
+
+    const filteredTaxi = taxis.filter((taxi) => {
+      return taxi.day_of_coding !== day;
+    });
+
+    setTaxis(filteredTaxi);
+  }, []);
 
   return (
     <Box component="div" className="home-container">
@@ -50,7 +62,12 @@ const Home = () => {
             <span className="plate-number">{taxi.plate_number}</span>
 
             {/* STATUS */}
-            <p className="taxi-status">{taxi.condition}</p>
+            <p
+              className="taxi-status"
+              color={taxi.condition === "parked" ? "#f5f212" : "orange"}
+            >
+              {taxi.condition}
+            </p>
 
             {/* BUTTONS */}
             <div className="button-container">

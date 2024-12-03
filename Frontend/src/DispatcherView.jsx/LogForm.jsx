@@ -51,6 +51,8 @@ const LogForm = () => {
     return offsetDate.toISOString().slice(0, 16);
   };
 
+  const today = formatLocalDateTime(new Date());
+
   const [formData, setFormData] = useState({
     park_or_dispatch: mode,
     driver: mode === "park" ? drivers[0].driver_details.driver_id : "",
@@ -344,6 +346,8 @@ const LogForm = () => {
               value={formData.time_out}
               onChange={handleChange}
               className="input"
+              min={today}
+              max={today}
             />
           </div>
         )}

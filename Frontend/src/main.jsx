@@ -141,8 +141,8 @@ const router = createBrowserRouter([
         <DriverLayout />
       </ProtectedRoute>
     ),
-    errorElement: <NotFound />,
-    children: [],
+    // errorElement: <NotFound />,
+    // children: [],
   },
   {
     path: "/dispatcher",

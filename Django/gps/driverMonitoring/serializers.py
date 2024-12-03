@@ -105,7 +105,7 @@ class CustomTokenPairSerializer(TokenObtainPairSerializer):
         if(getattr(employee, "role")=="driver"):
             driver_details = Driver.objects.filter(employee=employee).prefetch_related("taxi", "employee").first()
             print(driver_details) 
-            data["user_data"]=DriverSerializer(driver_details).data
+            data["user_data"]=DriverSerializer(driver_details, context=self.context).data
             return data
         elif (getattr(employee, "role")=="office staff"):
             office_staff_details = OfficeStaff.objects.filter(employee=employee).prefetch_related("employee").first()
@@ -222,7 +222,7 @@ class DriverSerializer(serializers.ModelSerializer):
     taxi = serializers.PrimaryKeyRelatedField(queryset=Taxi.objects.all(), required=False, allow_null=True, write_only=True)
     taxi_details = TaxiSerializer(source='taxi', read_only=True)
     
-    class Meta:
+    class Meta: 
         model = Driver
         fields = '__all__'
         extra_fields = ['taxi_details']
@@ -302,11 +302,30 @@ class DriverSerializer(serializers.ModelSerializer):
         return driver
 
     def update(self, instance, validated_data):
+        # employee_data = validated_data.pop("employee", None)
+        # if employee_data:
+        #     employee_id = employee_data.get("employee_id", None)
+        #     user = employee_data.pop("user", None)
+        #     if employee_id:
+        #         try:
+        #             employee = Employee.objects.get(employee_id=employee_id)
+        #             for atr, value in employee_data.items():
+        #                 setattr(employee, atr, value)
+        #             employee.save()
+        #         except Employee.DoesNotExist:
+        #             raise serializers.ValidationError("Employee with the provided ID does not exist")
+
         employee_data = validated_data.pop("employee", None)
+        user = employee_data.pop("user", None)
+        print(employee_data)
         if employee_data:
             for atr, value in employee_data.items():
+                if atr=="user":
+                    continue
                 setattr(instance.employee, atr, value)
             instance.employee.save()
+        
+        
 
         taxi_id = self.initial_data.pop("taxi_id", None)
         

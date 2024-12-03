@@ -35,6 +35,8 @@ class GenerateImageUploadToken(generics.RetrieveAPIView):
 
 class CustomTokenPairView(TokenObtainPairView):
     serializer_class = CustomTokenPairSerializer
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 
 

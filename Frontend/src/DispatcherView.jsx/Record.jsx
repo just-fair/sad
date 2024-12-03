@@ -1,10 +1,11 @@
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import Typography from "@mui/material/Typography";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import moment from "moment";
-import { Box } from "@mui/material";
+import { Box, Typography, Grid2 } from "@mui/material";
+
+import Chip from "@mui/material/Chip";
 
 const Record = ({ record }) => {
   return (
@@ -21,35 +22,132 @@ const Record = ({ record }) => {
             </Typography>
           </Box>
           <Typography>{record.taxi_details.plate_number}</Typography>
-          {/* <Typography>{record.driver_details.employee.last_name}</Typography> */}
-          <Typography>{record.park_or_dispatch}</Typography>
+
+          <Chip
+            label={record.park_or_dispatch === "park" ? "Parked" : "Pending"}
+            color={record.park_or_dispatch === "park" ? "success" : "warning"}
+            variant="outlined"
+          />
         </Box>
       </AccordionSummary>
+      ;
       <AccordionDetails>
         <Box>
           {Object.entries(record).map(([key, value]) => {
+            // Exclude id and image fields, and handle null values as "Pending"
+            if (
+              key === "dispatch_id" ||
+              key === "image" ||
+              key === "park_or_dispatch" ||
+              key === "is_short"
+            )
+              return null;
+
+            // If value is null, display as "Pending"
+            if (value === null) {
+              value = "Pending";
+            }
+
+            // Format values for specific fields
             if (key === "taxi_details") {
               return (
-                <Typography
-                  key={key}
-                >{`Taxi: ${value.plate_number}`}</Typography>
+                <Grid2 container key={key} spacing={2}>
+                  <Grid2 xs={4}>
+                    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                      Taxi:
+                    </Typography>
+                  </Grid2>
+                  <Grid2 xs={8}>
+                    <Typography
+                      variant="body1"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {value.plate_number}
+                    </Typography>
+                  </Grid2>
+                </Grid2>
               );
             }
 
             if (key === "driver_details") {
               return (
-                <Typography key={key}>
-                  {`Driver: ${value.employee.last_name}, ${value.employee.first_name} ${value.employee.middle_name}`}
-                </Typography>
+                <Grid2 container key={key} spacing={2}>
+                  <Grid2 xs={4}>
+                    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                      Driver:
+                    </Typography>
+                  </Grid2>
+                  <Grid2 xs={8}>
+                    <Typography
+                      variant="body1"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {`${value.employee.last_name}, ${value.employee.first_name} ${value.employee.middle_name}`}
+                    </Typography>
+                  </Grid2>
+                </Grid2>
               );
-            } else
-              return <Typography key={key}>{`${key}: ${value}`}</Typography>;
+            }
+
+            if (key === "time_out") {
+              return (
+                <Grid2 container key={key} spacing={2}>
+                  <Grid2 xs={4}>
+                    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                      Time out:
+                    </Typography>
+                  </Grid2>
+                  <Grid2 xs={8}>
+                    <Typography
+                      variant="body1"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {moment(value).format("MMMM D, YYYY, h:mm A")}
+                    </Typography>
+                  </Grid2>
+                </Grid2>
+              );
+            }
+
+            if (key === "time_in") {
+              return (
+                <Grid2 container key={key} spacing={2}>
+                  <Grid2 xs={4}>
+                    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                      Time in:
+                    </Typography>
+                  </Grid2>
+                  <Grid2 xs={8}>
+                    <Typography
+                      variant="body1"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {value !== "Pending"
+                        ? moment(value).format("MMMM D, YYYY, h:mm A")
+                        : value}
+                    </Typography>
+                  </Grid2>
+                </Grid2>
+              );
+            }
+
+            // For all other fields, display in key-value format
+            return (
+              <Grid2 container key={key} spacing={2}>
+                <Grid2 xs={4}>
+                  <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                    {`${key}:`}
+                  </Typography>
+                </Grid2>
+                <Grid2 xs={8}>
+                  <Typography variant="body1" sx={{ wordBreak: "break-word" }}>
+                    {value}
+                  </Typography>
+                </Grid2>
+              </Grid2>
+            );
           })}
         </Box>
-        {/* <Typography>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-          malesuada lacus ex, sit amet blandit leo lobortis eget.
-        </Typography> */}
       </AccordionDetails>
     </Accordion>
   );

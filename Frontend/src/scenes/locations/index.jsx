@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import car from "../../assets/car-top-view.png";
@@ -46,6 +46,9 @@ const MapComponent = ({ drivers }) => {
     const markers = {};
 
     drivers.forEach((driver) => {
+      const plateNumber = driver.taxi_details
+        ? driver.taxi_details.plate_number
+        : "Unknown Plate";
       if (!markers[driver.driver_id]) {
         // Add a new marker for new drivers with the car icon
         markers[driver.driver_id] = L.marker(
@@ -53,7 +56,9 @@ const MapComponent = ({ drivers }) => {
           {
             icon: carIcon, // Use the custom car icon
           }
-        ).addTo(map);
+        )
+          .addTo(map)
+          .bindTooltip(plateNumber, { permanent: true, offset: [0, -20] });
       } else {
         // Update the position of existing markers
         markers[driver.driver_id].setLatLng([
